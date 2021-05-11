@@ -18,6 +18,7 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -73,6 +74,8 @@ public class CowinController {
                 availableSlots.add(centerModel);
             }
         }
+
+        Collections.sort(availableSlots, (f, s) -> Integer.compare(f.getSessions().size(), s.getSessions().size()));
         return availableSlots;
 
     }
