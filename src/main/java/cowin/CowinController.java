@@ -5,11 +5,15 @@ import cowin.model.SessionModel;
 import cowin.response.CowinResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -20,27 +24,29 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+@RestController
 public class CowinController {
 
-    private RestTemplate restTemplate = new RestTemplate();
+    @Autowired
+    private RestTemplate restTemplate;
 
     private Logger log = LoggerFactory.getLogger(CowinController.class);
 
-    public List<CenterModel> getAllAvailableSlots(int ageLimit, String userAgent) {
-        String startDate = "11-05-2021";
+    @GetMapping("/available")
+    public List<CenterModel> getAllAvailableSlots(@RequestParam("age") int ageLimit, @RequestParam("date") String startDate) {
         Set<Integer> allDistricts = getAllDistricts();
         List<CenterModel> allSlots = new LinkedList<>();
         for (Integer district : allDistricts) {
-            allSlots.addAll(getCentersByDistrictAndStartDate(district, startDate, ageLimit, userAgent));
+            allSlots.addAll(getCentersByDistrictAndStartDate(district, startDate, ageLimit));
         }
         return allSlots;
     }
 
-    private List<CenterModel> getCentersByDistrictAndStartDate(Integer district, String startDate, int ageLimit, String userAgent) {
+    private List<CenterModel> getCentersByDistrictAndStartDate(Integer district, String startDate, int ageLimit) {
         String cowinUrl = "https://cdn-api.co-vin.in/api/v2/appointment/sessions/calendarByDistrict";
         UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(cowinUrl).queryParam("district_id", district).queryParam("date", startDate);
 
-        HttpEntity<String> entity = new HttpEntity("", createHttpHeaders(userAgent));
+        HttpEntity<String> entity = new HttpEntity("", createHttpHeaders());
         ResponseEntity<CowinResponse> response = null;
 
         try {
@@ -87,7 +93,7 @@ public class CowinController {
         return districts;
     }
 
-    private HttpHeaders createHttpHeaders(String userAgent) {
+    private HttpHeaders createHttpHeaders() {
         HttpHeaders headers = new HttpHeaders();
         headers.add("user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.99 Safari/537.36");
         headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN));
